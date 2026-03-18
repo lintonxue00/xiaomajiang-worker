@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账号管理 - OpenAI 注册系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stat-item .value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .toolbar {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .table-container {
+            padding: 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th, td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+            white-space: nowrap;
+        }
+
+        th {
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .email-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .log-container {
+            background: #1a1a2e;
+            color: #00ff9d;
+            padding: 20px;
+            margin: 20px 30px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .log-container.active {
+            display: block;
+        }
+
+        .log-container .log-entry {
+            margin-bottom: 4px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            background: #28a745;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        .toast.info {
+            background: #17a2b8;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .action-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>账号管理系统</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="label">总账号数</div>
+                    <div class="value" id="total-count">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="label">活跃账号</div>
+                    <div class="value" id="active-count">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary" id="btn-register">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                    注册新账号
+                </button>
+                <button class="btn btn-success" id="btn-refresh">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c1.66 0 3-.46 4.36-2.25 5.17-4.38l2.75.75c-1.12 3.3-4.26 5.71-7.92 5.71-4.97 0-9-4.03-9-9s4.03-9 9-9c2.6142 0 4.63.86 6.29 2.3l-4-4v6h2V6.35z"/>
+                    </svg>
+                    刷新列表
+                </button>
+            </div>
+            <button class="btn btn-primary" id="btn-export">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                一键导出 ZIP
+            </button>
+        </div>
+
+        <div class="log-container" id="log-container">
+            <div id="log-content"></div>
+        </div>
+
+        <div class="table-container">
+            <table id="accounts-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>邮箱</th>
+                        <th>账号 ID</th>
+                        <th>创建时间</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="accounts-body">
+                </tbody>
+            </table>
+            <div class="empty-state" id="empty-state">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13H5v-2h14v2z"/>
+                </svg>
+                <p>暂无账号数据，点击"注册新账号"开始</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        let isRegistering = false;
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // 显示提示消息
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // 写入日志
+        function addLog(text) {
+            const container = document.getElementById('log-container');
+            const content = document.getElementById('log-content');
+            container.classList.add('active');
+            content.innerHTML += `<div class="log-entry">${escapeHtml(text)}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log-content').innerHTML = '';
+            document.getElementById('log-container').classList.remove('active');
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        // 加载账号列表
+        async function loadAccounts() {
+            showLoading();
+            try {
+                const response = await fetch('/api/accounts');
+                if (!response.ok) throw new Error('加载失败');
+                const data = await response.json();
+                renderAccounts(data.accounts);
+                updateStats(data.stats);
+            } catch (e) {
+                showToast('加载账号列表失败: ' + e.message, 'error');
+            }
+            hideLoading();
+        }
+
+        // 渲染账号列表
+        function renderAccounts(accounts) {
+            const tbody = document.getElementById('accounts-body');
+            const emptyState = document.getElementById('empty-state');
+
+            if (!accounts || accounts.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            tbody.innerHTML = accounts.map(acc => `
+                <tr>
+                    <td>${acc.id}</td>
+                    <td class="email-cell" title="${escapeHtml(acc.email)}">${escapeHtml(acc.email)}</td>
+                    <td class="email-cell" title="${escapeHtml(acc.account_id || '-')}">${escapeHtml(acc.account_id || '-')}</td>
+                    <td>${formatDate(acc.created_at)}</td>
+                    <td>
+                        <span class="status-badge ${acc.status === 'active' ? 'status-active' : 'status-inactive'}">
+                            ${acc.status === 'active' ? '活跃' : '停用'}
+                        </span>
+                    </td>
+                    <td class="action-cell">
+                        <button class="btn btn-sm btn-danger" onclick="deleteAccount(${acc.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 更新统计
+        function updateStats(stats) {
+            document.getElementById('total-count').textContent = stats.total;
+            document.getElementById('active-count').textContent = stats.active;
+        }
+
+        // 注册新账号
+        async function registerAccount() {
+            if (isRegistering) return;
+            isRegistering = true;
+
+            const btn = document.getElementById('btn-register');
+            btn.disabled = true;
+
+            clearLog();
+            addLog('开始注册流程...');
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || '注册失败');
+                }
+
+                const result = await response.json();
+                addLog(`注册成功! 邮箱: ${result.email}`);
+                showToast('账号注册成功!', 'success');
+                await loadAccounts();
+            } catch (e) {
+                addLog(`注册失败: ${e.message}`);
+                showToast('注册失败: ' + e.message, 'error');
+            } finally {
+                isRegistering = false;
+                btn.disabled = false;
+            }
+        }
+
+        // 删除账号
+        async function deleteAccount(id) {
+            if (!confirm('确定要删除此账号吗？')) return;
+
+            showLoading();
+            try {
+                const response = await fetch(`/api/accounts/${id}`, {
+                    method: 'DELETE',
+                });
+                if (!response.ok) throw new Error('删除失败');
+                showToast('账号已删除', 'success');
+                await loadAccounts();
+            } catch (e) {
+                showToast('删除失败: ' + e.message, 'error');
+            }
+            hideLoading();
+        }
+
+        // 导出 ZIP
+        async function exportZip() {
+            showLoading();
+            try {
+                const response = await fetch('/api/export/zip');
+                if (!response.ok) throw new Error('导出失败');
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `accounts_${Date.now()}.zip`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showToast('导出成功!', 'success');
+            } catch (e) {
+                showToast('导出失败: ' + e.message, 'error');
+            }
+            hideLoading();
+        }
+
+        // 事件绑定
+        document.getElementById('btn-register').addEventListener('click', registerAccount);
+        document.getElementById('btn-refresh').addEventListener('click', loadAccounts);
+        document.getElementById('btn-export').addEventListener('click', exportZip);
+
+        // 初始化加载
+        loadAccounts();
+    </script>
+</body>
+</html>

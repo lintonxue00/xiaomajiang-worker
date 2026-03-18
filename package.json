@@ -1,0 +1,19 @@
+{
+  "name": "xiaomajiang-worker",
+  "version": "1.0.0",
+  "description": "OpenAI Auto Registrar Worker with D1",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create accounts_db",
+    "db:migrate": "wrangler d1 execute accounts_db --file=./db/schema.sql"
+  },
+  "keywords": ["cloudflare", "worker", "d1", "openai"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}

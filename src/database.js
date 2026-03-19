@@ -2,10 +2,46 @@
 // D1 数据库操作模块
 // ==========================================
 
+const schemaStatements = [
+    `
+        CREATE TABLE IF NOT EXISTS accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            account_id TEXT,
+            token_data TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            status TEXT DEFAULT 'active'
+        )
+    `,
+    `CREATE INDEX IF NOT EXISTS idx_email ON accounts(email)`,
+    `CREATE INDEX IF NOT EXISTS idx_created_at ON accounts(created_at)`,
+    `CREATE INDEX IF NOT EXISTS idx_status ON accounts(status)`,
+];
+
+let schemaInitPromise = null;
+
+async function ensureSchema(db) {
+    if (!schemaInitPromise) {
+        schemaInitPromise = (async () => {
+            for (const statement of schemaStatements) {
+                await db.prepare(statement).run();
+            }
+        })().catch((error) => {
+            schemaInitPromise = null;
+            throw error;
+        });
+    }
+
+    await schemaInitPromise;
+}
+
 /**
  * 保存账号信息到 D1 数据库
  */
 async function saveAccount(db, email, tokenData, accountId = '') {
+    await ensureSchema(db);
+
     const tokenJson = typeof tokenData === 'string' ? tokenData : JSON.stringify(tokenData);
     const createdAt = new Date().toISOString();
 
@@ -34,6 +70,8 @@ async function saveAccount(db, email, tokenData, accountId = '') {
  * 获取所有账号信息
  */
 async function getAllAccounts(db) {
+    await ensureSchema(db);
+
     const sql = `
         SELECT id, email, account_id, created_at, updated_at, status
         FROM accounts
@@ -48,6 +86,8 @@ async function getAllAccounts(db) {
  * 获取账号详细信息（包含 token_data）
  */
 async function getAccountDetail(db, id) {
+    await ensureSchema(db);
+
     const sql = `
         SELECT *
         FROM accounts
@@ -62,6 +102,8 @@ async function getAccountDetail(db, id) {
  * 获取所有账号的 token 数据（用于导出）
  */
 async function getAllTokenData(db) {
+    await ensureSchema(db);
+
     const sql = `
         SELECT id, email, token_data
         FROM accounts
@@ -77,6 +119,8 @@ async function getAllTokenData(db) {
  * 删除账号
  */
 async function deleteAccount(db, id) {
+    await ensureSchema(db);
+
     const sql = `DELETE FROM accounts WHERE id = ?`;
     await db.prepare(sql).bind(id).run();
 }
@@ -85,6 +129,8 @@ async function deleteAccount(db, id) {
  * 更新账号状态
  */
 async function updateAccountStatus(db, id, status) {
+    await ensureSchema(db);
+
     const sql = `
         UPDATE accounts
         SET status = ?, updated_at = ?
@@ -98,6 +144,8 @@ async function updateAccountStatus(db, id, status) {
  * 获取账号统计信息
  */
 async function getStats(db) {
+    await ensureSchema(db);
+
     const totalSql = `SELECT COUNT(*) as total FROM accounts`;
     const activeSql = `SELECT COUNT(*) as active FROM accounts WHERE status = 'active'`;
 
@@ -113,6 +161,7 @@ async function getStats(db) {
 }
 
 export {
+    ensureSchema,
     saveAccount,
     getAllAccounts,
     getAccountDetail,

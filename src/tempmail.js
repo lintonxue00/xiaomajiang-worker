@@ -10,15 +10,15 @@ const TEMPMAIL_BASE = "https://api.tempmail.lol/v2";
 async function createInbox() {
     try {
         const response = await fetch(`${TEMPMAIL_BASE}/inbox/create`, {
-            method: 'POST',
+            method: 'GET',
             headers: {
                 'Accept': 'application/json',
-                'Content-Type': 'application/json',
             },
         });
 
         if (response.status !== 200 && response.status !== 201) {
-            console.error(`[Error] Tempmail.lol 请求失败，状态码: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`[Error] Tempmail.lol 请求失败，状态码: ${response.status}，响应: ${errorText}`);
             return { email: '', token: '' };
         }
 

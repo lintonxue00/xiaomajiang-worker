@@ -147,7 +147,8 @@ async function runRegistration(logger) {
     }
 
     // 创建临时邮箱
-    const { email, token: devToken } = await createInbox();
+    logger('[*] 正在创建临时邮箱...');
+    const { email, token: devToken } = await createInbox(logger);
     if (!email || !devToken) {
         throw new Error('创建临时邮箱失败');
     }

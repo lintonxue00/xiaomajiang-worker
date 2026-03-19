@@ -7,32 +7,49 @@ const TEMPMAIL_BASE = "https://api.tempmail.lol/v2";
 /**
  * 创建 Tempmail.lol 邮箱并获取 token
  */
-async function createInbox() {
+async function createInbox(logger = null) {
+    const log = typeof logger === 'function' ? logger : () => {};
+
     try {
         const response = await fetch(`${TEMPMAIL_BASE}/inbox/create`, {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 'Accept': 'application/json',
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify({}),
         });
 
+        const rawText = await response.text();
+
         if (response.status !== 200 && response.status !== 201) {
-            const errorText = await response.text();
-            console.error(`[Error] Tempmail.lol 请求失败，状态码: ${response.status}，响应: ${errorText}`);
+            const detail = rawText ? `，响应: ${rawText.slice(0, 240)}` : '';
+            log(`[Error] Tempmail.lol 请求失败，状态码: ${response.status}${detail}`);
+            console.error(`[Error] Tempmail.lol 请求失败，状态码: ${response.status}${detail}`);
             return { email: '', token: '' };
         }
 
-        const data = await response.json();
+        let data = null;
+        try {
+            data = rawText ? JSON.parse(rawText) : null;
+        } catch (error) {
+            log(`[Error] Tempmail.lol 返回了无法解析的 JSON: ${error.message}`);
+            console.error(`[Error] Tempmail.lol 返回了无法解析的 JSON: ${error.message}`);
+            return { email: '', token: '' };
+        }
+
         const email = String(data.address || '').trim();
         const token = String(data.token || '').trim();
 
         if (!email || !token) {
+            log(`[Error] Tempmail.lol 返回数据不完整: ${rawText.slice(0, 240)}`);
             console.error('[Error] Tempmail.lol 返回数据不完整');
             return { email: '', token: '' };
         }
 
         return { email, token };
     } catch (e) {
+        log(`[Error] 创建 Tempmail.lol 邮箱出错: ${e.message}`);
         console.error(`[Error] 创建 Tempmail.lol 邮箱出错: ${e.message}`);
         return { email: '', token: '' };
     }

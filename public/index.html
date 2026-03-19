@@ -1,545 +1,451 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>账号管理 - OpenAI 注册系统</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .header .stats {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 20px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-item .label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .stat-item .value {
-            font-size: 32px;
-            font-weight: 700;
-        }
-
-        .toolbar {
-            padding: 20px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(56, 239, 125, 0.4);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .table-container {
-            padding: 0;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        thead {
-            background: #f8f9fa;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        th, td {
-            padding: 16px 20px;
-            text-align: left;
-            border-bottom: 1px solid #e9ecef;
-            white-space: nowrap;
-        }
-
-        th {
-            font-weight: 600;
-            color: #495057;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.5px;
-        }
-
-        tbody tr:hover {
-            background: #f8f9fa;
-        }
-
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-inactive {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .email-cell {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: #6c757d;
-        }
-
-        .empty-state svg {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .log-container {
-            background: #1a1a2e;
-            color: #00ff9d;
-            padding: 20px;
-            margin: 20px 30px;
-            border-radius: 8px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            max-height: 300px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .log-container.active {
-            display: block;
-        }
-
-        .log-container .log-entry {
-            margin-bottom: 4px;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .loading-overlay.hidden {
-            display: none;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 16px 24px;
-            border-radius: 8px;
-            color: white;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 1001;
-            animation: slideIn 0.3s ease;
-        }
-
-        .toast.success {
-            background: #28a745;
-        }
-
-        .toast.error {
-            background: #dc3545;
-        }
-
-        .toast.info {
-            background: #17a2b8;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .action-cell {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>账号管理 - OpenAI 注册系统</title>
+  <style>
+    :root{--bg:#0c1730;--bg2:#16305e;--panel:rgba(255,255,255,.95);--line:rgba(15,23,42,.08);--text:#162033;--muted:#66758b;--primary:#1d63f2;--primary-soft:rgba(29,99,242,.12);--success:#0f8a6a;--success-soft:rgba(15,138,106,.12);--danger:#d84f4f;--danger-soft:rgba(216,79,79,.12);--shadow:0 28px 70px rgba(4,10,24,.24)}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif;background:radial-gradient(circle at top left,rgba(80,134,255,.22),transparent 34%),linear-gradient(135deg,var(--bg) 0%,#12264b 44%,var(--bg2) 100%);min-height:100vh;padding:22px;color:var(--text)}
+    .container{max-width:1240px;margin:0 auto;background:var(--panel);border-radius:24px;overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.5)}
+    .header{padding:34px 34px 26px;background:linear-gradient(130deg,rgba(11,19,34,.95),rgba(19,74,183,.88));color:#fff}
+    .header h1{font-size:30px;font-weight:700}
+    .header p{margin-top:10px;color:rgba(255,255,255,.82);font-size:15px}
+    .stats{margin-top:24px;display:grid;grid-template-columns:repeat(2,minmax(0,180px));gap:14px}
+    .stat-item{padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16)}
+    .stat-item .label{font-size:13px;color:rgba(255,255,255,.78)}
+    .stat-item .value{margin-top:6px;font-size:34px;line-height:1;font-weight:700}
+    .toolbar{padding:22px 30px;background:#f6f8fc;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+    .toolbar-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 18px;border:none;border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;transition:transform .2s ease,opacity .2s ease,box-shadow .2s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
+    .btn-primary{color:#fff;background:linear-gradient(135deg,#0f5fe6 0%,#2c8cff 100%);box-shadow:0 14px 30px rgba(15,95,230,.24)}
+    .btn-success{color:#fff;background:linear-gradient(135deg,#10988d 0%,#32d4a3 100%);box-shadow:0 14px 30px rgba(16,152,141,.22)}
+    .btn-ghost{color:var(--text);background:#fff;border:1px solid rgba(15,23,42,.08);box-shadow:0 10px 24px rgba(12,18,31,.08)}
+    .btn-danger{color:#fff;background:linear-gradient(135deg,#dc3545 0%,#f06b77 100%)}
+    .registration-panel{margin:28px 30px 10px;padding:24px;border-radius:24px;border:1px solid rgba(29,99,242,.14);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(242,247,255,.96))}
+    .registration-panel.running{border-color:rgba(29,99,242,.3);box-shadow:0 18px 38px rgba(29,99,242,.08)}
+    .registration-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
+    .eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--primary)}
+    .registration-head h2{margin-top:8px;font-size:24px}
+    .registration-head p{margin-top:8px;max-width:720px;color:var(--muted);font-size:14px;line-height:1.6}
+    .registration-metrics{display:flex;gap:12px;flex-wrap:wrap}
+    .metric-card{min-width:148px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.84);border:1px solid var(--line)}
+    .metric-card .label{display:block;font-size:12px;color:var(--muted)}
+    .metric-card strong{display:block;margin-top:6px;font-size:20px}
+    .progress-shell{margin-top:22px}
+    .progress-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+    .progress-track{margin-top:10px;height:14px;border-radius:999px;overflow:hidden;background:rgba(29,99,242,.1);border:1px solid rgba(29,99,242,.08)}
+    .progress-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#1d63f2 0%,#17c7a2 100%);transition:width .35s ease}
+    .stage-grid{margin-top:18px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+    .stage-card{position:relative;min-height:114px;padding:16px 14px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.76)}
+    .stage-card.active{transform:translateY(-2px);border-color:rgba(29,99,242,.38);background:#eaf3ff}
+    .stage-card.done{border-color:rgba(15,138,106,.28);background:#edf9f5}
+    .stage-card.error{border-color:rgba(216,79,79,.34);background:#fff0f0}
+    .stage-card .step{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:999px;font-size:12px;font-weight:700;color:var(--primary);background:var(--primary-soft)}
+    .stage-card.done .step{color:var(--success);background:var(--success-soft)}
+    .stage-card.error .step{color:var(--danger);background:var(--danger-soft)}
+    .stage-card h3{margin-top:14px;font-size:15px}
+    .stage-card p{margin-top:8px;font-size:12px;line-height:1.55;color:var(--muted)}
+    .stage-state{position:absolute;top:16px;right:14px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;color:var(--muted);background:rgba(15,23,42,.06)}
+    .stage-card.active .stage-state{color:var(--primary);background:var(--primary-soft)}
+    .stage-card.done .stage-state{color:var(--success);background:var(--success-soft)}
+    .stage-card.error .stage-state{color:var(--danger);background:var(--danger-soft)}
+    .log-shell{margin-top:18px;border-radius:20px;overflow:hidden;border:1px solid rgba(15,23,42,.08);background:#0d1728}
+    .log-shell-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;color:rgba(255,255,255,.9);border-bottom:1px solid rgba(255,255,255,.08);background:rgba(8,14,28,.9)}
+    .log-shell-head strong{font-size:14px}
+    .log-shell-head span{font-size:12px;color:rgba(153,169,194,.92)}
+    .log-container{display:block;min-height:240px;max-height:320px;overflow-y:auto;padding:14px 18px 18px;font-family:"Consolas","Monaco",monospace;font-size:12px;line-height:1.6;color:#d4f8ef;background:linear-gradient(180deg,rgba(11,19,35,.96),rgba(10,15,28,.98))}
+    .log-empty{color:rgba(153,169,194,.88);padding-top:10px}
+    .log-entry{display:grid;grid-template-columns:78px 1fr;gap:12px;padding:6px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+    .log-entry:last-child{border-bottom:none}
+    .log-time{color:rgba(120,153,199,.88)}
+    .log-entry.success .log-text{color:#6ff4c6}
+    .log-entry.error .log-text{color:#ff9898}
+    .log-entry.system .log-text{color:#8ec5ff}
+    .table-container{padding:18px 0 0;overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    thead{background:#f6f8fc;position:sticky;top:0;z-index:5}
+    th,td{padding:16px 20px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+    th{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+    tbody tr:hover{background:rgba(244,247,252,.9)}
+    .status-badge{display:inline-flex;align-items:center;justify-content:center;min-width:62px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700}
+    .status-active{color:var(--success);background:rgba(15,138,106,.12)}
+    .status-inactive{color:var(--danger);background:rgba(216,79,79,.12)}
+    .email-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+    .action-cell{display:flex;gap:8px}
+    .btn-sm{min-height:34px;padding:0 12px;border-radius:12px;font-size:12px}
+    .empty-state{padding:66px 20px 70px;text-align:center;color:var(--muted)}
+    .empty-state svg{width:72px;height:72px;margin-bottom:18px;opacity:.45}
+    .loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,10,20,.46);backdrop-filter:blur(6px);z-index:1000}
+    .loading-overlay.hidden{display:none}
+    .spinner{width:54px;height:54px;border-radius:50%;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;animation:spin 1s linear infinite}
+    .toast{position:fixed;right:28px;bottom:28px;padding:14px 18px;border-radius:14px;color:#fff;font-size:14px;font-weight:600;z-index:1001;box-shadow:0 18px 36px rgba(15,23,42,.18);animation:slide-in .25s ease}
+    .toast.success{background:linear-gradient(135deg,#14866d 0%,#25b589 100%)}
+    .toast.error{background:linear-gradient(135deg,#d64545 0%,#ef6f6f 100%)}
+    .toast.info{background:linear-gradient(135deg,#2359d1 0%,#3f87ff 100%)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes slide-in{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @media (max-width:1100px){.stage-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media (max-width:720px){body{padding:14px}.header{padding:28px 20px 24px}.toolbar,.registration-panel{margin-left:16px;margin-right:16px;padding-left:20px;padding-right:20px}.container{border-radius:20px}.toolbar-actions,.registration-metrics{width:100%}.toolbar .btn,.toolbar-actions .btn{flex:1 1 auto}.stage-grid{grid-template-columns:1fr}.log-entry{grid-template-columns:1fr;gap:2px}th,td{padding-left:14px;padding-right:14px}}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>账号管理系统</h1>
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="label">总账号数</div>
-                    <div class="value" id="total-count">0</div>
-                </div>
-                <div class="stat-item">
-                    <div class="label">活跃账号</div>
-                    <div class="value" id="active-count">0</div>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="header">
+      <h1>账号管理系统</h1>
+      <p>从启动注册到令牌回收，前端会实时展示阶段进度和服务端日志。</p>
+      <div class="stats">
+        <div class="stat-item"><div class="label">总账号数</div><div class="value" id="total-count">0</div></div>
+        <div class="stat-item"><div class="label">活跃账号</div><div class="value" id="active-count">0</div></div>
+      </div>
+    </div>
 
-        <div class="toolbar">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-primary" id="btn-register">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                    </svg>
-                    注册新账号
-                </button>
-                <button class="btn btn-success" id="btn-refresh">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c1.66 0 3-.46 4.36-2.25 5.17-4.38l2.75.75c-1.12 3.3-4.26 5.71-7.92 5.71-4.97 0-9-4.03-9-9s4.03-9 9-9c2.6142 0 4.63.86 6.29 2.3l-4-4v6h2V6.35z"/>
-                    </svg>
-                    刷新列表
-                </button>
-            </div>
-            <button class="btn btn-primary" id="btn-export">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-                </svg>
-                一键导出 ZIP
-            </button>
-        </div>
+    <div class="toolbar">
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" id="btn-register">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+          <span id="btn-register-label">启动注册</span>
+        </button>
+        <button class="btn btn-success" id="btn-refresh">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c1.66 0 3-.46 4.36-2.25 5.17-4.38l2.75.75c-1.12 3.3-4.26 5.71-7.92 5.71-4.97 0-9-4.03-9-9s4.03-9 9-9c2.6142 0 4.63.86 6.29 2.3l-4-4v6h2V6.35z"></path></svg>
+          <span>刷新列表</span>
+        </button>
+      </div>
+      <button class="btn btn-ghost" id="btn-export">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path></svg>
+        <span>导出 ZIP</span>
+      </button>
+    </div>
 
+    <section class="registration-panel" id="registration-panel">
+      <div class="registration-head">
+        <div>
+          <div class="eyebrow">Registration Runner</div>
+          <h2>启动按键 + 阶段进度 + 实时日志</h2>
+          <p id="progress-status-text">点击“启动注册”后，前端会按阶段推进进度条，并持续显示服务端返回的注册日志。</p>
+        </div>
+        <div class="registration-metrics">
+          <div class="metric-card"><span class="label">当前阶段</span><strong id="current-stage-label">待启动</strong></div>
+          <div class="metric-card"><span class="label">完成度</span><strong id="progress-percent">0%</strong></div>
+        </div>
+      </div>
+      <div class="progress-shell">
+        <div class="progress-meta"><span id="progress-caption">等待你发起新的注册任务。</span><span id="progress-meta">Idle</span></div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <div class="stage-grid" id="stage-grid"></div>
+      <div class="log-shell">
+        <div class="log-shell-head"><strong>实时日志面板</strong><span id="log-status">尚未开始</span></div>
         <div class="log-container" id="log-container">
-            <div id="log-content"></div>
+          <div class="log-empty" id="log-empty">等待启动注册任务。</div>
+          <div id="log-content"></div>
         </div>
+      </div>
+    </section>
 
-        <div class="table-container">
-            <table id="accounts-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>邮箱</th>
-                        <th>账号 ID</th>
-                        <th>创建时间</th>
-                        <th>状态</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="accounts-body">
-                </tbody>
-            </table>
-            <div class="empty-state" id="empty-state">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13H5v-2h14v2z"/>
-                </svg>
-                <p>暂无账号数据，点击"注册新账号"开始</p>
-            </div>
-        </div>
+    <div class="table-container">
+      <table id="accounts-table">
+        <thead><tr><th>ID</th><th>邮箱</th><th>账号 ID</th><th>创建时间</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody id="accounts-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13H5v-2h14v2z"></path></svg>
+        <p>暂无账号数据，点击“启动注册”开始生成新账号。</p>
+      </div>
     </div>
+  </div>
 
-    <div class="loading-overlay hidden" id="loading-overlay">
-        <div class="spinner"></div>
-    </div>
+  <div class="loading-overlay hidden" id="loading-overlay"><div class="spinner"></div></div>
 
-    <script>
-        let isRegistering = false;
+  <script>
+    const STAGES=[
+      {id:'boot',label:'环境检查',description:'确认出口环境和基础网络链路可用。',progress:8},
+      {id:'mailbox',label:'临时邮箱',description:'申请临时邮箱并等待接收验证码。',progress:24},
+      {id:'authorize',label:'授权注册',description:'建立授权会话并提交注册表单。',progress:46},
+      {id:'verify',label:'邮箱验证',description:'轮询邮箱并校验 6 位验证码。',progress:68},
+      {id:'workspace',label:'工作区配置',description:'创建账号后选择 workspace 并继续流程。',progress:86},
+      {id:'token',label:'令牌回收',description:'抓取回调并换取最终令牌，准备落库。',progress:96}
+    ];
+    const STAGE_INDEX=Object.fromEntries(STAGES.map((stage,index)=>[stage.id,index]));
+    let isRegistering=false,reachedStageIndex=-1,activeStageId=null,failedStageId=null,streamCompleted=false,streamFailed=false;
 
-        // 显示加载状态
-        function showLoading() {
-            document.getElementById('loading-overlay').classList.remove('hidden');
+    const registerButton=document.getElementById('btn-register');
+    const registerButtonLabel=document.getElementById('btn-register-label');
+    const progressFill=document.getElementById('progress-fill');
+    const progressPercent=document.getElementById('progress-percent');
+    const progressCaption=document.getElementById('progress-caption');
+    const progressMeta=document.getElementById('progress-meta');
+    const progressStatusText=document.getElementById('progress-status-text');
+    const currentStageLabel=document.getElementById('current-stage-label');
+    const stageGrid=document.getElementById('stage-grid');
+    const logContainer=document.getElementById('log-container');
+    const logContent=document.getElementById('log-content');
+    const logEmpty=document.getElementById('log-empty');
+    const logStatus=document.getElementById('log-status');
+    const registrationPanel=document.getElementById('registration-panel');
+
+    function showLoading(){document.getElementById('loading-overlay').classList.remove('hidden')}
+    function hideLoading(){document.getElementById('loading-overlay').classList.add('hidden')}
+    function showToast(message,type='info'){const toast=document.createElement('div');toast.className=`toast ${type}`;toast.textContent=message;document.body.appendChild(toast);setTimeout(()=>toast.remove(),3000)}
+    function escapeHtml(text){const div=document.createElement('div');div.textContent=text;return div.innerHTML}
+    function formatDate(dateStr){if(!dateStr)return'-';return new Date(dateStr).toLocaleString('zh-CN')}
+    function formatTime(dateLike){return new Date(dateLike||Date.now()).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+
+    function renderStageGrid(){
+      stageGrid.innerHTML=STAGES.map((stage,index)=>`<article class="stage-card" data-stage="${stage.id}"><span class="step">${String(index+1).padStart(2,'0')}</span><span class="stage-state">待机</span><h3>${stage.label}</h3><p>${stage.description}</p></article>`).join('');
+    }
+
+    function renderStageStates(){
+      stageGrid.querySelectorAll('.stage-card').forEach((card)=>{
+        const stageId=card.dataset.stage;
+        const index=STAGE_INDEX[stageId];
+        const state=card.querySelector('.stage-state');
+        card.classList.remove('done','active','error');
+        if(failedStageId&&stageId===failedStageId){card.classList.add('error');state.textContent='失败';return}
+        if(index<reachedStageIndex){card.classList.add('done');state.textContent='已完成';return}
+        if(activeStageId===stageId){card.classList.add(streamCompleted?'done':'active');state.textContent=streamCompleted?'已完成':(isRegistering?'进行中':'待机');return}
+        state.textContent='待机';
+      });
+    }
+
+    function setProgress(percent,caption,meta){
+      const safePercent=Math.max(0,Math.min(100,Math.round(percent)));
+      progressFill.style.width=`${safePercent}%`;
+      progressPercent.textContent=`${safePercent}%`;
+      if(caption)progressCaption.textContent=caption;
+      if(meta)progressMeta.textContent=meta;
+    }
+
+    function updateStage(stageId,message,progress){
+      if(!(stageId in STAGE_INDEX))return;
+      activeStageId=stageId;
+      failedStageId=null;
+      reachedStageIndex=Math.max(reachedStageIndex,STAGE_INDEX[stageId]);
+      currentStageLabel.textContent=STAGES[STAGE_INDEX[stageId]].label;
+      progressStatusText.textContent=message||STAGES[STAGE_INDEX[stageId]].description;
+      setProgress(progress??STAGES[STAGE_INDEX[stageId]].progress,message,STAGES[STAGE_INDEX[stageId]].label);
+      renderStageStates();
+    }
+
+    function resetRegistrationPanel(){
+      reachedStageIndex=-1;activeStageId=null;failedStageId=null;streamCompleted=false;streamFailed=false;
+      progressStatusText.textContent='点击“启动注册”后，前端会按阶段推进进度条，并持续显示服务端返回的注册日志。';
+      currentStageLabel.textContent='待启动';
+      progressCaption.textContent='等待你发起新的注册任务。';
+      progressMeta.textContent='Idle';
+      progressPercent.textContent='0%';
+      progressFill.style.width='0%';
+      logStatus.textContent='尚未开始';
+      logContent.innerHTML='';
+      logEmpty.style.display='block';
+      registrationPanel.classList.remove('running');
+      renderStageStates();
+    }
+
+    function setRegistering(active){
+      isRegistering=active;
+      registerButton.disabled=active;
+      registerButtonLabel.textContent=active?'注册进行中...':'启动注册';
+      if(active){registrationPanel.classList.add('running');logStatus.textContent='连接服务端...'}
+      else if(!streamFailed){registrationPanel.classList.remove('running')}
+      renderStageStates();
+    }
+
+    function appendLog(text,kind='info',timestamp=new Date().toISOString()){
+      logEmpty.style.display='none';
+      const entry=document.createElement('div');
+      entry.className=`log-entry ${kind}`;
+      const time=document.createElement('span');
+      time.className='log-time';
+      time.textContent=formatTime(timestamp);
+      const content=document.createElement('div');
+      content.className='log-text';
+      content.textContent=text;
+      entry.appendChild(time);
+      entry.appendChild(content);
+      logContent.appendChild(entry);
+      logContainer.scrollTop=logContainer.scrollHeight;
+    }
+
+    async function loadAccounts(){
+      showLoading();
+      try{
+        const response=await fetch('/api/accounts');
+        if(!response.ok)throw new Error('加载失败');
+        const data=await response.json();
+        renderAccounts(data.accounts);
+        updateStats(data.stats);
+      }catch(error){
+        showToast('加载账号列表失败: '+error.message,'error');
+      }
+      hideLoading();
+    }
+
+    function renderAccounts(accounts){
+      const tbody=document.getElementById('accounts-body');
+      const emptyState=document.getElementById('empty-state');
+      if(!accounts||accounts.length===0){tbody.innerHTML='';emptyState.style.display='block';return}
+      emptyState.style.display='none';
+      tbody.innerHTML=accounts.map((account)=>`<tr><td>${account.id}</td><td class="email-cell" title="${escapeHtml(account.email)}">${escapeHtml(account.email)}</td><td class="email-cell" title="${escapeHtml(account.account_id||'-')}">${escapeHtml(account.account_id||'-')}</td><td>${formatDate(account.created_at)}</td><td><span class="status-badge ${account.status==='active'?'status-active':'status-inactive'}">${account.status==='active'?'活跃':'停用'}</span></td><td class="action-cell"><button class="btn btn-sm btn-danger" onclick="deleteAccount(${account.id})">删除</button></td></tr>`).join('');
+    }
+
+    function updateStats(stats){
+      document.getElementById('total-count').textContent=stats.total;
+      document.getElementById('active-count').textContent=stats.active;
+    }
+
+    async function parseErrorResponse(response){
+      const contentType=response.headers.get('Content-Type')||'';
+      if(contentType.includes('application/json')){
+        const payload=await response.json().catch(()=>null);
+        return payload?.error||'注册失败';
+      }
+      return await response.text()||'注册失败';
+    }
+
+    async function handleRegisterEvent(event){
+      if(!event||typeof event!=='object')return;
+      switch(event.type){
+        case 'start':
+          updateStage(event.stage||'boot',event.message,event.progress);
+          logStatus.textContent='服务端已接单';
+          appendLog(event.message||'注册任务已启动。','system',event.ts);
+          break;
+        case 'stage':
+          updateStage(event.stage,event.message,event.progress);
+          logStatus.textContent=`${currentStageLabel.textContent} 中`;
+          break;
+        case 'log':
+          if(event.stage)updateStage(event.stage,event.message,event.progress);
+          appendLog(event.message,'info',event.ts);
+          break;
+        case 'heartbeat':
+          if(event.stage)updateStage(event.stage,event.message,event.progress);
+          logStatus.textContent=event.message||'轮询邮箱中';
+          progressMeta.textContent=`Heartbeat ${event.count||0}`;
+          break;
+        case 'success':
+          streamCompleted=true;
+          failedStageId=null;
+          activeStageId=event.stage||STAGES[STAGES.length-1].id;
+          reachedStageIndex=STAGE_INDEX[activeStageId]??(STAGES.length-1);
+          currentStageLabel.textContent='注册完成';
+          progressStatusText.textContent=event.message||'账号已经完成注册并写入数据库。';
+          setProgress(100,event.message||'账号已经完成注册并写入数据库。','Done');
+          renderStageStates();
+          logStatus.textContent='任务完成';
+          appendLog(event.message||`注册成功: ${event.email}`,'success',event.ts);
+          showToast(`账号注册成功: ${event.email}`,'success');
+          await loadAccounts();
+          break;
+        case 'error':
+          streamFailed=true;
+          failedStageId=event.stage||activeStageId;
+          if(failedStageId&&failedStageId in STAGE_INDEX){
+            reachedStageIndex=Math.max(reachedStageIndex,STAGE_INDEX[failedStageId]);
+            currentStageLabel.textContent=STAGES[STAGE_INDEX[failedStageId]].label;
+          }else{
+            currentStageLabel.textContent='执行失败';
+          }
+          progressStatusText.textContent=event.message||'注册流程发生错误。';
+          setProgress(event.progress??Math.max(6,reachedStageIndex>=0?STAGES[reachedStageIndex].progress:6),event.message||'注册流程发生错误。','Error');
+          renderStageStates();
+          registrationPanel.classList.remove('running');
+          logStatus.textContent='任务失败';
+          appendLog(event.message||'注册失败','error',event.ts);
+          showToast(event.message||'注册失败','error');
+          break;
+      }
+    }
+
+    async function consumeRegistrationStream(response){
+      if(!response.body)throw new Error('当前环境不支持流式响应');
+      const reader=response.body.getReader();
+      const decoder=new TextDecoder();
+      let buffer='';
+      while(true){
+        const {value,done}=await reader.read();
+        if(done)break;
+        buffer+=decoder.decode(value,{stream:true});
+        const lines=buffer.split('\n');
+        buffer=lines.pop()||'';
+        for(const line of lines){
+          if(!line.trim())continue;
+          await handleRegisterEvent(JSON.parse(line));
         }
+      }
+      buffer+=decoder.decode();
+      if(buffer.trim())await handleRegisterEvent(JSON.parse(buffer));
+      if(!streamCompleted&&!streamFailed)throw new Error('连接已结束，但没有收到完成信号。');
+    }
 
-        function hideLoading() {
-            document.getElementById('loading-overlay').classList.add('hidden');
+    async function registerAccount(){
+      if(isRegistering)return;
+      resetRegistrationPanel();
+      setRegistering(true);
+      updateStage('boot','正在建立流式连接并启动注册任务。',4);
+      appendLog('已向服务端发起注册请求，等待阶段事件返回。','system');
+      try{
+        const response=await fetch('/api/register',{method:'POST'});
+        if(!response.ok)throw new Error(await parseErrorResponse(response));
+        await consumeRegistrationStream(response);
+      }catch(error){
+        if(!streamFailed){
+          streamFailed=true;
+          failedStageId=activeStageId;
+          progressStatusText.textContent=error.message||'注册流程异常结束。';
+          logStatus.textContent='任务失败';
+          appendLog(error.message||'注册失败','error');
+          renderStageStates();
+          showToast('注册失败: '+error.message,'error');
         }
+      }finally{
+        setRegistering(false);
+      }
+    }
 
-        // 显示提示消息
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
+    async function deleteAccount(id){
+      if(!confirm('确定要删除此账号吗？'))return;
+      showLoading();
+      try{
+        const response=await fetch(`/api/accounts/${id}`,{method:'DELETE'});
+        if(!response.ok)throw new Error('删除失败');
+        showToast('账号已删除','success');
+        await loadAccounts();
+      }catch(error){
+        showToast('删除失败: '+error.message,'error');
+      }
+      hideLoading();
+    }
 
-        // 写入日志
-        function addLog(text) {
-            const container = document.getElementById('log-container');
-            const content = document.getElementById('log-content');
-            container.classList.add('active');
-            content.innerHTML += `<div class="log-entry">${escapeHtml(text)}</div>`;
-            container.scrollTop = container.scrollHeight;
-        }
+    async function exportZip(){
+      showLoading();
+      try{
+        const response=await fetch('/api/export/zip');
+        if(!response.ok)throw new Error('导出失败');
+        const blob=await response.blob();
+        const url=URL.createObjectURL(blob);
+        const anchor=document.createElement('a');
+        anchor.href=url;
+        anchor.download=`accounts_${Date.now()}.zip`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        showToast('导出成功','success');
+      }catch(error){
+        showToast('导出失败: '+error.message,'error');
+      }
+      hideLoading();
+    }
 
-        function clearLog() {
-            document.getElementById('log-content').innerHTML = '';
-            document.getElementById('log-container').classList.remove('active');
-        }
-
-        // HTML 转义
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // 格式化日期
-        function formatDate(dateStr) {
-            if (!dateStr) return '-';
-            const date = new Date(dateStr);
-            return date.toLocaleString('zh-CN');
-        }
-
-        // 加载账号列表
-        async function loadAccounts() {
-            showLoading();
-            try {
-                const response = await fetch('/api/accounts');
-                if (!response.ok) throw new Error('加载失败');
-                const data = await response.json();
-                renderAccounts(data.accounts);
-                updateStats(data.stats);
-            } catch (e) {
-                showToast('加载账号列表失败: ' + e.message, 'error');
-            }
-            hideLoading();
-        }
-
-        // 渲染账号列表
-        function renderAccounts(accounts) {
-            const tbody = document.getElementById('accounts-body');
-            const emptyState = document.getElementById('empty-state');
-
-            if (!accounts || accounts.length === 0) {
-                tbody.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
-            }
-
-            emptyState.style.display = 'none';
-            tbody.innerHTML = accounts.map(acc => `
-                <tr>
-                    <td>${acc.id}</td>
-                    <td class="email-cell" title="${escapeHtml(acc.email)}">${escapeHtml(acc.email)}</td>
-                    <td class="email-cell" title="${escapeHtml(acc.account_id || '-')}">${escapeHtml(acc.account_id || '-')}</td>
-                    <td>${formatDate(acc.created_at)}</td>
-                    <td>
-                        <span class="status-badge ${acc.status === 'active' ? 'status-active' : 'status-inactive'}">
-                            ${acc.status === 'active' ? '活跃' : '停用'}
-                        </span>
-                    </td>
-                    <td class="action-cell">
-                        <button class="btn btn-sm btn-danger" onclick="deleteAccount(${acc.id})">删除</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        // 更新统计
-        function updateStats(stats) {
-            document.getElementById('total-count').textContent = stats.total;
-            document.getElementById('active-count').textContent = stats.active;
-        }
-
-        // 注册新账号
-        async function registerAccount() {
-            if (isRegistering) return;
-            isRegistering = true;
-
-            const btn = document.getElementById('btn-register');
-            btn.disabled = true;
-
-            clearLog();
-            addLog('开始注册流程...');
-
-            try {
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                });
-
-                if (!response.ok) {
-                    const error = await response.text();
-                    throw new Error(error || '注册失败');
-                }
-
-                const result = await response.json();
-                addLog(`注册成功! 邮箱: ${result.email}`);
-                showToast('账号注册成功!', 'success');
-                await loadAccounts();
-            } catch (e) {
-                addLog(`注册失败: ${e.message}`);
-                showToast('注册失败: ' + e.message, 'error');
-            } finally {
-                isRegistering = false;
-                btn.disabled = false;
-            }
-        }
-
-        // 删除账号
-        async function deleteAccount(id) {
-            if (!confirm('确定要删除此账号吗？')) return;
-
-            showLoading();
-            try {
-                const response = await fetch(`/api/accounts/${id}`, {
-                    method: 'DELETE',
-                });
-                if (!response.ok) throw new Error('删除失败');
-                showToast('账号已删除', 'success');
-                await loadAccounts();
-            } catch (e) {
-                showToast('删除失败: ' + e.message, 'error');
-            }
-            hideLoading();
-        }
-
-        // 导出 ZIP
-        async function exportZip() {
-            showLoading();
-            try {
-                const response = await fetch('/api/export/zip');
-                if (!response.ok) throw new Error('导出失败');
-
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `accounts_${Date.now()}.zip`;
-                a.click();
-                URL.revokeObjectURL(url);
-
-                showToast('导出成功!', 'success');
-            } catch (e) {
-                showToast('导出失败: ' + e.message, 'error');
-            }
-            hideLoading();
-        }
-
-        // 事件绑定
-        document.getElementById('btn-register').addEventListener('click', registerAccount);
-        document.getElementById('btn-refresh').addEventListener('click', loadAccounts);
-        document.getElementById('btn-export').addEventListener('click', exportZip);
-
-        // 初始化加载
-        loadAccounts();
-    </script>
+    renderStageGrid();
+    resetRegistrationPanel();
+    document.getElementById('btn-register').addEventListener('click',registerAccount);
+    document.getElementById('btn-refresh').addEventListener('click',loadAccounts);
+    document.getElementById('btn-export').addEventListener('click',exportZip);
+    loadAccounts();
+  </script>
 </body>
 </html>

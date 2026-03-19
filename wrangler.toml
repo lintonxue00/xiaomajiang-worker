@@ -10,6 +10,6 @@ run_worker_first = ["/api/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "accounts_db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "8f1c1155-5f43-471f-ada3-b98a24353648"
 
 # 部署前替换成真实数据库 ID。
